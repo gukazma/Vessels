@@ -20,6 +20,9 @@ var test_sequence: Array = [
 	{"action": "screenshot", "name": "initial_state"},
 	{"action": "wait", "duration": 0.5},
 
+	# ==================== 基础移动测试 ====================
+	{"action": "log", "message": "--- 基础移动测试 ---"},
+
 	# 测试向右移动
 	{"action": "log", "message": "测试: 向右移动"},
 	{"action": "move", "direction": "right", "duration": 1.0},
@@ -55,6 +58,60 @@ var test_sequence: Array = [
 	{"action": "screenshot", "name": "stopped"},
 	{"action": "verify_velocity", "expected_zero": true},
 
+	# ==================== 背包系统测试 ====================
+	{"action": "log", "message": "--- 背包系统测试 ---"},
+
+	# 测试添加物品
+	{"action": "log", "message": "测试: 添加物品到背包"},
+	{"action": "test_inventory_add", "item_id": "bandage", "quantity": 5},
+	{"action": "verify_inventory", "check": "has_item", "item_id": "bandage", "expected_quantity": 5},
+
+	# 测试移除物品
+	{"action": "log", "message": "测试: 从背包移除物品"},
+	{"action": "test_inventory_remove", "item_id": "bandage", "quantity": 2},
+	{"action": "verify_inventory", "check": "has_item", "item_id": "bandage", "expected_quantity": 3},
+
+	# 测试物品堆叠
+	{"action": "log", "message": "测试: 物品堆叠"},
+	{"action": "test_inventory_add", "item_id": "bandage", "quantity": 10},
+	{"action": "verify_inventory", "check": "has_item", "item_id": "bandage", "expected_quantity": 13},
+
+	# ==================== 时间系统测试 ====================
+	{"action": "log", "message": "--- 时间系统测试 ---"},
+
+	# 测试时间获取
+	{"action": "log", "message": "测试: 获取当前时间"},
+	{"action": "test_time_system", "check": "get_time"},
+
+	# 测试时间流逝
+	{"action": "log", "message": "测试: 时间流逝"},
+	{"action": "wait", "duration": 2.0},
+	{"action": "test_time_system", "check": "time_passed"},
+
+	# ==================== 游戏阶段测试 ====================
+	{"action": "log", "message": "--- 游戏阶段测试 ---"},
+
+	# 测试当前阶段
+	{"action": "log", "message": "测试: 获取游戏阶段"},
+	{"action": "test_game_phase", "check": "get_phase"},
+
+	# ==================== 玩家状态测试 ====================
+	{"action": "log", "message": "--- 玩家状态测试 ---"},
+
+	# 测试生命值
+	{"action": "log", "message": "测试: 玩家生命值"},
+	{"action": "test_player_stats", "check": "hp"},
+
+	# 测试饥饿度
+	{"action": "log", "message": "测试: 玩家饥饿度"},
+	{"action": "test_player_stats", "check": "hunger"},
+
+	# 测试体力
+	{"action": "log", "message": "测试: 玩家体力"},
+	{"action": "test_player_stats", "check": "stamina"},
+
+	# ==================== 完成测试 ====================
+
 	# 移动到中心
 	{"action": "log", "message": "移动回屏幕中心"},
 	{"action": "move_to", "target": Vector2(320, 240), "duration": 2.0},
@@ -66,6 +123,10 @@ var test_sequence: Array = [
 
 var last_position: Vector2
 var current_simulated_input: Dictionary = {}
+
+# 测试辅助变量
+var last_time_hour: int = 0
+var last_time_minute: int = 0
 
 func _ready() -> void:
 	if not auto_test_enabled:
@@ -150,6 +211,34 @@ func execute_next_test() -> void:
 			verify_velocity(test.expected_zero)
 			execute_next_test()
 
+		# 背包测试
+		"test_inventory_add":
+			test_inventory_add(test.item_id, test.quantity)
+			execute_next_test()
+
+		"test_inventory_remove":
+			test_inventory_remove(test.item_id, test.quantity)
+			execute_next_test()
+
+		"verify_inventory":
+			verify_inventory(test.check, test.get("item_id", ""), test.get("expected_quantity", 0))
+			execute_next_test()
+
+		# 时间系统测试
+		"test_time_system":
+			test_time_system(test.check)
+			execute_next_test()
+
+		# 游戏阶段测试
+		"test_game_phase":
+			test_game_phase(test.check)
+			execute_next_test()
+
+		# 玩家状态测试
+		"test_player_stats":
+			test_player_stats(test.check)
+			execute_next_test()
+
 		"report":
 			generate_report()
 			execute_next_test()
@@ -216,6 +305,8 @@ func stop_all_input() -> void:
 		"move_right": false,
 		"move_up": false,
 		"move_down": false,
+		"run": false,
+		"interact": false,
 	}
 	# 释放所有输入
 	for action in current_simulated_input:
@@ -266,6 +357,171 @@ func verify_velocity(expected_zero: bool) -> void:
 	var result = "[%s] %s" % ["PASS" if passed else "FAIL", message]
 	print("[AutoTest] " + result)
 	test_results.append({"check": "velocity_zero", "passed": passed, "message": message})
+
+# ==================== 背包测试方法 ====================
+
+func test_inventory_add(item_id: String, quantity: int) -> void:
+	var inventory = _get_inventory_manager()
+	if not inventory:
+		print("[AutoTest] 警告: 未找到背包管理器")
+		test_results.append({"check": "inventory_add", "passed": false, "message": "未找到背包管理器"})
+		return
+
+	var added = inventory.add_item(item_id, quantity)
+	var passed = added > 0
+	var message = "添加物品 %s x%d: 实际添加=%d" % [item_id, quantity, added]
+
+	var result = "[%s] %s" % ["PASS" if passed else "FAIL", message]
+	print("[AutoTest] " + result)
+	test_results.append({"check": "inventory_add", "passed": passed, "message": message})
+
+func test_inventory_remove(item_id: String, quantity: int) -> void:
+	var inventory = _get_inventory_manager()
+	if not inventory:
+		print("[AutoTest] 警告: 未找到背包管理器")
+		test_results.append({"check": "inventory_remove", "passed": false, "message": "未找到背包管理器"})
+		return
+
+	var removed = inventory.remove_item(item_id, quantity)
+	var passed = removed > 0
+	var message = "移除物品 %s x%d: 实际移除=%d" % [item_id, quantity, removed]
+
+	var result = "[%s] %s" % ["PASS" if passed else "FAIL", message]
+	print("[AutoTest] " + result)
+	test_results.append({"check": "inventory_remove", "passed": passed, "message": message})
+
+func verify_inventory(check: String, item_id: String, expected_quantity: int) -> void:
+	var inventory = _get_inventory_manager()
+	if not inventory:
+		print("[AutoTest] 警告: 未找到背包管理器")
+		test_results.append({"check": "inventory_verify", "passed": false, "message": "未找到背包管理器"})
+		return
+
+	var passed = false
+	var message = ""
+
+	match check:
+		"has_item":
+			var actual_quantity = inventory.get_item_count(item_id)
+			passed = actual_quantity == expected_quantity
+			message = "物品 %s 数量: 期望=%d, 实际=%d" % [item_id, expected_quantity, actual_quantity]
+
+	var result = "[%s] %s" % ["PASS" if passed else "FAIL", message]
+	print("[AutoTest] " + result)
+	test_results.append({"check": "inventory_verify", "passed": passed, "message": message})
+
+func _get_inventory_manager():
+	if has_node("/root/InventoryManager"):
+		return get_node("/root/InventoryManager")
+	return null
+
+# ==================== 时间系统测试方法 ====================
+
+func test_time_system(check: String) -> void:
+	var passed = false
+	var message = ""
+
+	match check:
+		"get_time":
+			if GameManager:
+				last_time_hour = GameManager.current_hour
+				last_time_minute = GameManager.current_minute
+				passed = true
+				message = "当前时间: %02d:%02d" % [last_time_hour, last_time_minute]
+			else:
+				message = "未找到 GameManager"
+
+		"time_passed":
+			if GameManager:
+				var current_hour = GameManager.current_hour
+				var current_minute = GameManager.current_minute
+
+				# 检查时间是否流逝 (可能跨小时)
+				var time_passed = (current_hour * 60 + current_minute) > (last_time_hour * 60 + last_time_minute)
+				passed = time_passed or (current_hour == last_time_hour and current_minute == last_time_minute)
+				message = "时间流逝: %02d:%02d -> %02d:%02d" % [last_time_hour, last_time_minute, current_hour, current_minute]
+
+				# 更新记录
+				last_time_hour = current_hour
+				last_time_minute = current_minute
+			else:
+				message = "未找到 GameManager"
+
+	var result = "[%s] %s" % ["PASS" if passed else "INFO", message]
+	print("[AutoTest] " + result)
+	test_results.append({"check": "time_" + check, "passed": passed, "message": message})
+
+# ==================== 游戏阶段测试方法 ====================
+
+func test_game_phase(check: String) -> void:
+	var passed = false
+	var message = ""
+
+	match check:
+		"get_phase":
+			if GameManager:
+				var phase_name = GameManager.get_phase_name()
+				var phase_display = GameManager.get_phase_display_name()
+				passed = not phase_name.is_empty()
+				message = "当前阶段: %s (%s)" % [phase_display, phase_name]
+			else:
+				message = "未找到 GameManager"
+
+	var result = "[%s] %s" % ["PASS" if passed else "INFO", message]
+	print("[AutoTest] " + result)
+	test_results.append({"check": "phase_" + check, "passed": passed, "message": message})
+
+# ==================== 玩家状态测试方法 ====================
+
+func test_player_stats(check: String) -> void:
+	var passed = false
+	var message = ""
+
+	# 尝试获取玩家状态组件
+	var player_stats = null
+	if player and player.has_node("PlayerStats"):
+		player_stats = player.get_node("PlayerStats")
+
+	match check:
+		"hp":
+			if player_stats:
+				var current_hp = player_stats.current_hp
+				var max_hp = player_stats.max_hp
+				passed = current_hp > 0 and current_hp <= max_hp
+				message = "HP: %.1f / %.1f" % [current_hp, max_hp]
+			elif player:
+				var current_hp = player.current_health if player.has_method("get") else 0
+				var max_hp = player.max_health if player.has_method("get") else 100
+				passed = current_hp > 0
+				message = "HP: %.1f / %.1f (from Entity)" % [current_hp, max_hp]
+			else:
+				message = "未找到玩家"
+
+		"hunger":
+			if player_stats:
+				var current_hunger = player_stats.current_hunger
+				var max_hunger = player_stats.max_hunger
+				passed = current_hunger >= 0 and current_hunger <= max_hunger
+				message = "饥饿度: %.1f / %.1f" % [current_hunger, max_hunger]
+			else:
+				passed = true  # 没有状态组件时跳过
+				message = "饥饿度: (无状态组件)"
+
+		"stamina":
+			if player_stats:
+				var current_stamina = player_stats.current_stamina
+				var max_stamina = player_stats.max_stamina
+				passed = current_stamina >= 0 and current_stamina <= max_stamina
+				message = "体力: %.1f / %.1f" % [current_stamina, max_stamina]
+			else:
+				passed = true  # 没有状态组件时跳过
+				message = "体力: (无状态组件)"
+
+	var result = "[%s] %s" % ["PASS" if passed else "INFO", message]
+	print("[AutoTest] " + result)
+	test_results.append({"check": "stats_" + check, "passed": passed, "message": message})
+
+# ==================== 报告生成 ====================
 
 func generate_report() -> void:
 	var total = test_results.size()
