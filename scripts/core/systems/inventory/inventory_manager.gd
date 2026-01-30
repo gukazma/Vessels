@@ -1,6 +1,6 @@
 # inventory_manager.gd
 # 背包系统 - 管理玩家和据点的物品
-class_name InventoryManager
+# 注意: 此脚本作为 Autoload 使用，不需要 class_name
 extends Node
 
 ## ==================== 常量 ====================

@@ -14,7 +14,7 @@ signal dialogue_ended()
 ## ==================== 节点引用 ====================
 
 ## 对话面板
-@onready var dialogue_panel: Panel = $DialoguePanel if has_node("DialoguePanel") else null
+@onready var dialogue_panel: PanelContainer = $DialoguePanel if has_node("DialoguePanel") else null
 
 ## NPC 名称标签
 @onready var npc_name_label: Label = $DialoguePanel/NPCName if has_node("DialoguePanel/NPCName") else null

@@ -145,6 +145,16 @@ func auto_save_exists() -> bool:
 	return FileAccess.file_exists(file_path)
 
 
+## 检查是否有任何存档数据
+func has_save_data() -> bool:
+	# 检查所有存档槽位
+	for slot in range(1, MAX_SAVE_SLOTS + 1):
+		if save_exists(slot):
+			return true
+	# 检查自动存档
+	return auto_save_exists()
+
+
 ## 获取存档信息列表
 func get_save_list() -> Array:
 	var saves: Array = []

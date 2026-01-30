@@ -69,6 +69,9 @@ func _process(_delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# 调用父类处理移动
+	super._physics_process(delta)
+
 	# 处理跑步体力消耗
 	if is_running and is_moving and player_stats:
 		if not player_stats.consume_stamina(run_stamina_cost * delta):
