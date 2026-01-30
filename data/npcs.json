@@ -1,0 +1,125 @@
+{
+	"li_qiang": {
+		"id": "li_qiang",
+		"name": "李强",
+		"age": 45,
+		"profession": "保安",
+		"stats": {
+			"combat": 8,
+			"build": 4,
+			"medical": 2,
+			"social": 3,
+			"cooking": 5
+		},
+		"traits": ["calm", "taciturn", "responsible"],
+		"recruit_affection": 80,
+		"recruit_quest": "protect_resident",
+		"spawn_locations": ["residential_gate", "supermarket"],
+		"skills": ["tactical_command", "emergency_defense"],
+		"description": "在部队待了二十年，什么场面没见过。这些怪物？比战场上的敌人好对付多了。",
+		"dialogs": {
+			"first_meet": "你好，我是这小区的保安。最近街上不太平，出门小心点。",
+			"affection_40": "你这人不错，不像其他人只会慌。有什么事可以找我。",
+			"affection_80": "我跟着你干。这世道，得有组织有纪律才能活下去。"
+		}
+	},
+	"chen_yuqing": {
+		"id": "chen_yuqing",
+		"name": "陈雨晴",
+		"age": 28,
+		"profession": "护士",
+		"stats": {
+			"combat": 1,
+			"build": 2,
+			"medical": 9,
+			"social": 6,
+			"cooking": 4
+		},
+		"traits": ["kind", "careful", "timid"],
+		"recruit_affection": 70,
+		"recruit_quest": "save_infected",
+		"spawn_locations": ["hospital", "pharmacy"],
+		"skills": ["professional_care", "emergency_surgery"],
+		"description": "在急诊室工作了五年，本以为见惯了生死。但当病人开始咬人的时候...",
+		"dialogs": {
+			"first_meet": "你也是来躲避那些...那些东西的吗？医院已经沦陷了...",
+			"affection_40": "谢谢你帮我。如果你受伤了，来找我，我会尽力帮你的。",
+			"affection_70": "我一个人活不下去的。带上我吧，我可以照顾大家。"
+		}
+	},
+	"wang_dachui": {
+		"id": "wang_dachui",
+		"name": "王大厨",
+		"age": 52,
+		"profession": "餐馆老板",
+		"stats": {
+			"combat": 3,
+			"build": 3,
+			"medical": 1,
+			"social": 7,
+			"cooking": 10
+		},
+		"traits": ["optimistic", "talkative", "nostalgic"],
+		"recruit_affection": 80,
+		"recruit_quest": "last_supper",
+		"spawn_locations": ["restaurant", "market"],
+		"skills": ["master_cooking", "feast"],
+		"description": "开了三十年的馆子，末日来了也不能让大家饿肚子。再差的食材，我也能做出像样的饭菜。",
+		"dialogs": {
+			"first_meet": "哎呀，客人来了！虽然现在没什么好吃的，坐坐喝杯水？",
+			"affection_40": "你这小伙子/姑娘不错。等这事过去了，请你吃我的拿手菜。",
+			"affection_80": "我这把老骨头还能做几年饭。你们要是不嫌弃，我就跟着你们了。"
+		}
+	},
+	"xiao_xue": {
+		"id": "xiao_xue",
+		"name": "小雪",
+		"age": 21,
+		"profession": "大学生",
+		"stats": {
+			"combat": 2,
+			"build": 6,
+			"medical": 3,
+			"social": 5,
+			"cooking": 2
+		},
+		"traits": ["clever", "curious", "growth"],
+		"recruit_affection": 60,
+		"recruit_quest": "find_usb",
+		"spawn_locations": ["internet_cafe", "convenience_store", "university"],
+		"skills": ["fast_learner", "electronic_tech"],
+		"description": "我就是来网吧通宵的，谁知道出门就是世界末日。不过...这不就像游戏里一样吗？",
+		"dialogs": {
+			"first_meet": "啊！不是僵尸吧？呼...吓死我了。你也是幸存者？",
+			"affection_40": "你人挺好的。教教我怎么打那些怪物呗？我想变强。",
+			"affection_60": "我不想一个人了。带我走吧，我什么都可以学！"
+		}
+	},
+	"lao_zhou": {
+		"id": "lao_zhou",
+		"name": "老周",
+		"age": 55,
+		"profession": "退休工程师",
+		"stats": {
+			"combat": 2,
+			"build": 10,
+			"medical": 2,
+			"social": 4,
+			"cooking": 3
+		},
+		"traits": ["rigorous", "stubborn", "knowledgeable"],
+		"recruit_affection": 85,
+		"recruit_quest": "repair_generator",
+		"spawn_locations": ["hardware_store", "factory"],
+		"skills": ["engineering_master", "fortify"],
+		"description": "搞了一辈子工程，退休了还要来修世界末日的烂摊子。不过，能修的东西我都能修。",
+		"dialogs": {
+			"first_meet": "年轻人，你懂工程吗？这些围栏搭得不行，撑不了几天。",
+			"affection_40": "你还算有点脑子。不过要是想建东西，得听我的。",
+			"affection_85": "行，我跟你干。但是建设方面，我说了算。"
+		},
+		"recruit_requirements": {
+			"base_has_workbench": true
+		}
+	}
+}
