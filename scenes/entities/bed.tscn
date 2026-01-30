@@ -1,0 +1,30 @@
+[gd_scene load_steps=3 format=3 uid="uid://bed_scene_001"]
+
+[ext_resource type="Script" path="res://scripts/entities/interactables/bed.gd" id="1_bed_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_interaction"]
+size = Vector2(32, 48)
+
+[node name="Bed" type="Area2D" groups=["beds", "interactables"]]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_bed_script")
+interaction_prompt = "Press E to sleep"
+bed_name = "Bed"
+is_player_owned = false
+hp_regen_per_hour = 5.0
+stamina_regen_per_hour = 20.0
+wake_up_hour = 6
+sleep_available_hour = 21
+allow_daytime_sleep = false
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 0
+scale = Vector2(2, 2)
+hframes = 2
+frame = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_interaction")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
