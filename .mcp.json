@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "aseprite-mcp": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@iborymagic/aseprite-mcp"],
+      "env": {
+        "ASEPRITE_PATH": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Aseprite\\Aseprite.exe"
+      }
+    },
+    "godot-mcp": {
+      "command": "node",
+      "args": ["D:\\codes\\games\\Vessels\\.godot-mcp\\build\\index.js"],
+      "env": {
+        "GODOT_PATH": "C:\\Program Files\\Godot\\Godot.exe",
+        "DEBUG": "false"
+      }
+    }
+  }
+}

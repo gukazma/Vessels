@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://bqkx8p7vn6c1y"]
+
+[ext_resource type="Texture2D" path="res://assets/sprites/tree_animated_sheet.png" id="1_texture"]
+[ext_resource type="Script" path="res://scripts/tree.gd" id="2_script"]
+
+[node name="Tree" type="Node2D"]
+script = ExtResource("2_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 0
+scale = Vector2(3, 3)
+texture = ExtResource("1_texture")
+hframes = 4
+frame = 0

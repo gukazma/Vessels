@@ -1,0 +1,17 @@
+# Godot
+.godot/
+*.import
+
+# MCP server (submodule)
+.godot-mcp/
+
+# Screenshots (generated)
+screenshots/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+*.swp
