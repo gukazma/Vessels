@@ -1,180 +1,160 @@
--- 创建一个简单的像素角色
--- 16x16 像素，带行走动画
+-- Player Character Sprite (16x16, 4 directions, 4 walk frames)
+-- Directions: down(0), left(1), right(2), up(3)
+-- Each direction has 4 walk frames
 
-local sprite = Sprite(16, 16)
-sprite.filename = "player.aseprite"
+local sprite = Sprite(64, 64)  -- 4 directions horizontally, 4 frames vertically
+sprite.filename = "d:\\codes\\games\\Vessels\\.worktrees\\art\\assets\\sprites\\player\\player_walk.aseprite"
 
--- 定义颜色
-local skin = Color(255, 206, 180)       -- 肤色
-local hair = Color(101, 67, 33)         -- 头发棕色
-local shirt = Color(65, 105, 225)       -- 衬衫蓝色
-local shirtDark = Color(45, 85, 205)    -- 衬衫阴影
-local pants = Color(50, 50, 50)         -- 裤子深灰
-local shoes = Color(30, 30, 30)         -- 鞋子黑色
-local transparent = Color(0, 0, 0, 0)
+-- Color palette
+local skin = Color(255, 213, 170)       -- Skin tone
+local hair = Color(60, 40, 30)          -- Dark brown hair
+local shirt = Color(70, 130, 180)       -- Steel blue shirt
+local pants = Color(50, 50, 70)         -- Dark pants
+local outline = Color(30, 30, 30)       -- Dark outline
+local eyes = Color(40, 40, 40)          -- Eyes
+local transparent = Color(0, 0, 0, 0)   -- Transparent
 
--- 清除图像函数
-local function clearImage(image)
-    for y = 0, image.height - 1 do
-        for x = 0, image.width - 1 do
-            image:drawPixel(x, y, transparent)
+-- Clear sprite
+local img = sprite.cels[1].image
+for y = 0, img.height - 1 do
+    for x = 0, img.width - 1 do
+        img:drawPixel(x, y, transparent)
+    end
+end
+
+-- Helper function to draw a pixel
+local function setPixel(x, y, color)
+    if x >= 0 and x < img.width and y >= 0 and y < img.height then
+        img:drawPixel(x, y, color)
+    end
+end
+
+-- Draw player for a specific direction and frame
+local function drawPlayer(baseX, baseY, direction, frame)
+    -- Animation offsets for walk cycle
+    local bodyOffset = 0
+    local legFrame = frame  -- 1-4
+
+    if frame == 2 or frame == 4 then
+        bodyOffset = -1  -- Bob up slightly
+    end
+
+    -- Head (4x4 centered at top)
+    for y = 2, 5 do
+        for x = 6, 9 do
+            setPixel(baseX + x, baseY + y + bodyOffset, skin)
         end
     end
-end
 
--- 绘制角色帧
-local function drawCharacter(image, frame)
-    clearImage(image)
-
-    -- 头发
-    local hairPixels = {
-        {6, 2}, {7, 2}, {8, 2}, {9, 2},
-        {5, 3}, {6, 3}, {7, 3}, {8, 3}, {9, 3}, {10, 3},
-        {5, 4}, {10, 4},
-    }
-    for _, pos in ipairs(hairPixels) do
-        image:drawPixel(pos[1], pos[2], hair)
+    -- Hair on top
+    if direction == 0 then  -- Down
+        for x = 6, 9 do
+            setPixel(baseX + x, baseY + 2 + bodyOffset, hair)
+        end
+        -- Eyes
+        setPixel(baseX + 7, baseY + 4 + bodyOffset, eyes)
+        setPixel(baseX + 8, baseY + 4 + bodyOffset, eyes)
+    elseif direction == 1 then  -- Left
+        for x = 7, 9 do
+            setPixel(baseX + x, baseY + 2 + bodyOffset, hair)
+        end
+        setPixel(baseX + 9, baseY + 3 + bodyOffset, hair)
+        -- Eye
+        setPixel(baseX + 7, baseY + 4 + bodyOffset, eyes)
+    elseif direction == 2 then  -- Right
+        for x = 6, 8 do
+            setPixel(baseX + x, baseY + 2 + bodyOffset, hair)
+        end
+        setPixel(baseX + 6, baseY + 3 + bodyOffset, hair)
+        -- Eye
+        setPixel(baseX + 8, baseY + 4 + bodyOffset, eyes)
+    else  -- Up (direction == 3)
+        for x = 6, 9 do
+            setPixel(baseX + x, baseY + 2 + bodyOffset, hair)
+            setPixel(baseX + x, baseY + 3 + bodyOffset, hair)
+        end
     end
 
-    -- 脸部
-    local facePixels = {
-        {6, 4}, {7, 4}, {8, 4}, {9, 4},
-        {5, 5}, {6, 5}, {7, 5}, {8, 5}, {9, 5}, {10, 5},
-        {6, 6}, {7, 6}, {8, 6}, {9, 6},
-    }
-    for _, pos in ipairs(facePixels) do
-        image:drawPixel(pos[1], pos[2], skin)
+    -- Body/Shirt (6x4)
+    for y = 6, 9 do
+        for x = 5, 10 do
+            setPixel(baseX + x, baseY + y + bodyOffset, shirt)
+        end
     end
 
-    -- 眼睛
-    image:drawPixel(7, 5, Color(0, 0, 0))
-    image:drawPixel(9, 5, Color(0, 0, 0))
-
-    -- 身体
-    local bodyPixels = {
-        {6, 7}, {7, 7}, {8, 7}, {9, 7},
-        {5, 8}, {6, 8}, {7, 8}, {8, 8}, {9, 8}, {10, 8},
-        {5, 9}, {6, 9}, {7, 9}, {8, 9}, {9, 9}, {10, 9},
-        {6, 10}, {7, 10}, {8, 10}, {9, 10},
-    }
-    for _, pos in ipairs(bodyPixels) do
-        image:drawPixel(pos[1], pos[2], shirt)
-    end
-
-    -- 身体阴影
-    local bodyShadowPixels = {
-        {5, 8}, {5, 9},
-        {6, 10},
-    }
-    for _, pos in ipairs(bodyShadowPixels) do
-        image:drawPixel(pos[1], pos[2], shirtDark)
-    end
-
-    -- 手臂 (根据帧变化)
-    if frame == 1 then
-        -- 静止/行走帧1
-        image:drawPixel(4, 8, skin)
-        image:drawPixel(4, 9, skin)
-        image:drawPixel(11, 8, skin)
-        image:drawPixel(11, 9, skin)
-    elseif frame == 2 then
-        -- 行走帧2 - 手臂向前
-        image:drawPixel(4, 7, skin)
-        image:drawPixel(4, 8, skin)
-        image:drawPixel(11, 9, skin)
-        image:drawPixel(11, 10, skin)
-    elseif frame == 3 then
-        -- 行走帧3 - 手臂向后
-        image:drawPixel(4, 9, skin)
-        image:drawPixel(4, 10, skin)
-        image:drawPixel(11, 7, skin)
-        image:drawPixel(11, 8, skin)
-    end
-
-    -- 裤子
-    local pantsPixels = {
-        {6, 11}, {7, 11}, {8, 11}, {9, 11},
-    }
-    for _, pos in ipairs(pantsPixels) do
-        image:drawPixel(pos[1], pos[2], pants)
-    end
-
-    -- 腿 (根据帧变化)
-    if frame == 1 then
-        -- 静止
-        image:drawPixel(6, 12, pants)
-        image:drawPixel(7, 12, pants)
-        image:drawPixel(8, 12, pants)
-        image:drawPixel(9, 12, pants)
-        image:drawPixel(6, 13, shoes)
-        image:drawPixel(7, 13, shoes)
-        image:drawPixel(8, 13, shoes)
-        image:drawPixel(9, 13, shoes)
-    elseif frame == 2 then
-        -- 行走帧2
-        image:drawPixel(5, 12, pants)
-        image:drawPixel(6, 12, pants)
-        image:drawPixel(9, 12, pants)
-        image:drawPixel(10, 12, pants)
-        image:drawPixel(5, 13, shoes)
-        image:drawPixel(6, 13, shoes)
-        image:drawPixel(9, 13, shoes)
-        image:drawPixel(10, 13, shoes)
-    elseif frame == 3 then
-        -- 行走帧3
-        image:drawPixel(6, 12, pants)
-        image:drawPixel(7, 12, pants)
-        image:drawPixel(8, 12, pants)
-        image:drawPixel(9, 12, pants)
-        image:drawPixel(6, 13, shoes)
-        image:drawPixel(7, 13, shoes)
-        image:drawPixel(8, 13, shoes)
-        image:drawPixel(9, 13, shoes)
+    -- Arms
+    if frame == 2 then
+        setPixel(baseX + 4, baseY + 7 + bodyOffset, skin)
+        setPixel(baseX + 11, baseY + 8 + bodyOffset, skin)
     elseif frame == 4 then
-        -- 行走帧4
-        image:drawPixel(6, 12, pants)
-        image:drawPixel(7, 12, pants)
-        image:drawPixel(9, 12, pants)
-        image:drawPixel(10, 12, pants)
-        image:drawPixel(6, 13, shoes)
-        image:drawPixel(7, 13, shoes)
-        image:drawPixel(9, 13, shoes)
-        image:drawPixel(10, 13, shoes)
+        setPixel(baseX + 4, baseY + 8 + bodyOffset, skin)
+        setPixel(baseX + 11, baseY + 7 + bodyOffset, skin)
+    else
+        setPixel(baseX + 4, baseY + 7 + bodyOffset, skin)
+        setPixel(baseX + 11, baseY + 7 + bodyOffset, skin)
+    end
+
+    -- Legs/Pants
+    if frame == 1 then  -- Standing
+        setPixel(baseX + 6, baseY + 10, pants)
+        setPixel(baseX + 6, baseY + 11, pants)
+        setPixel(baseX + 6, baseY + 12, pants)
+        setPixel(baseX + 9, baseY + 10, pants)
+        setPixel(baseX + 9, baseY + 11, pants)
+        setPixel(baseX + 9, baseY + 12, pants)
+    elseif frame == 2 then  -- Left leg forward
+        setPixel(baseX + 5, baseY + 10, pants)
+        setPixel(baseX + 5, baseY + 11, pants)
+        setPixel(baseX + 5, baseY + 12, pants)
+        setPixel(baseX + 9, baseY + 10, pants)
+        setPixel(baseX + 10, baseY + 11, pants)
+        setPixel(baseX + 10, baseY + 12, pants)
+    elseif frame == 3 then  -- Standing
+        setPixel(baseX + 6, baseY + 10, pants)
+        setPixel(baseX + 6, baseY + 11, pants)
+        setPixel(baseX + 6, baseY + 12, pants)
+        setPixel(baseX + 9, baseY + 10, pants)
+        setPixel(baseX + 9, baseY + 11, pants)
+        setPixel(baseX + 9, baseY + 12, pants)
+    else  -- frame == 4, Right leg forward
+        setPixel(baseX + 6, baseY + 10, pants)
+        setPixel(baseX + 5, baseY + 11, pants)
+        setPixel(baseX + 5, baseY + 12, pants)
+        setPixel(baseX + 10, baseY + 10, pants)
+        setPixel(baseX + 10, baseY + 11, pants)
+        setPixel(baseX + 10, baseY + 12, pants)
+    end
+
+    -- Outline around head
+    setPixel(baseX + 5, baseY + 2 + bodyOffset, outline)
+    setPixel(baseX + 10, baseY + 2 + bodyOffset, outline)
+    setPixel(baseX + 5, baseY + 5 + bodyOffset, outline)
+    setPixel(baseX + 10, baseY + 5 + bodyOffset, outline)
+end
+
+-- Draw all 4 directions (columns) x 4 frames (rows)
+for frame = 1, 4 do
+    for dir = 0, 3 do
+        drawPlayer(dir * 16, (frame - 1) * 16, dir, frame)
     end
 end
 
--- 获取活动图层
-local layer = sprite.layers[1]
-layer.name = "Character"
+sprite:saveAs("d:\\codes\\games\\Vessels\\.worktrees\\art\\assets\\sprites\\player\\player_walk.aseprite")
 
--- 创建4帧动画
-local frameData = {1, 2, 1, 3}  -- idle, walk1, idle, walk2
-local frameDurations = {200, 100, 200, 100}
+-- Export sprite sheet
+app.command.ExportSpriteSheet {
+    ui = false,
+    askOverwrite = false,
+    type = SpriteSheetType.ROWS,
+    textureFilename = "d:\\codes\\games\\Vessels\\.worktrees\\art\\assets\\sprites\\player\\player_walk.png",
+    dataFilename = "d:\\codes\\games\\Vessels\\.worktrees\\art\\assets\\sprites\\player\\player_walk.json",
+    dataFormat = SpriteSheetDataFormat.JSON_ARRAY,
+    layer = "",
+    tag = "",
+    splitLayers = false,
+    listLayers = true,
+    listTags = true,
+    listSlices = true
+}
 
--- 绘制第一帧
-local cel1 = sprite.cels[1]
-drawCharacter(cel1.image, frameData[1])
-sprite.frames[1].duration = frameDurations[1] / 1000
-
--- 创建后续帧
-for i = 2, #frameData do
-    sprite:newEmptyFrame(i)
-    sprite.frames[i].duration = frameDurations[i] / 1000
-    local cel = sprite:newCel(layer, i)
-    drawCharacter(cel.image, frameData[i])
-end
-
--- 创建动画标签
-local idleTag = sprite:newTag(1, 1)
-idleTag.name = "idle"
-
-local walkTag = sprite:newTag(1, 4)
-walkTag.name = "walk"
-walkTag.aniDir = AniDir.FORWARD
-
--- 保存文件
-local outputPath = "D:/codes/games/Vessels/assets/sprites/player.aseprite"
-sprite:saveAs(outputPath)
-
-print("Player sprite created with 4 frames!")
-print("Saved to: " .. outputPath)
+print("Player walk sprite created successfully!")
