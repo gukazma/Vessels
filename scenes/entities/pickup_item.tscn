@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://pickup_item_scene_001"]
+
+[ext_resource type="Script" path="res://scripts/entities/items/pickup_item.gd" id="1_pickup_item_script"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_pickup"]
+radius = 8.0
+
+[node name="PickupItem" type="Area2D" groups=["items", "pickups"]]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_pickup_item_script")
+interaction_prompt = "Press E to pick up"
+item_id = ""
+quantity = 1
+auto_pickup = false
+destroy_on_pickup = true
+bounce_effect = true
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 0
+scale = Vector2(2, 2)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_pickup")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]

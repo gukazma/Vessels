@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3 uid="uid://container_scene_001"]
+
+[ext_resource type="Script" path="res://scripts/entities/interactables/container.gd" id="1_container_script"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_interaction"]
+size = Vector2(24, 24)
+
+[node name="Container" type="Area2D" groups=["containers", "interactables"]]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_container_script")
+interaction_prompt = "Press E to open"
+container_name = "Container"
+capacity = 6
+allow_deposit = false
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 0
+scale = Vector2(2, 2)
+hframes = 2
+frame = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_interaction")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
