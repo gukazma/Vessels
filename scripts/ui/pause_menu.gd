@@ -99,7 +99,7 @@ func _on_load_pressed() -> void:
 	load_requested.emit()
 
 	if SaveManager:
-		SaveManager.load_game()
+		SaveManager.load_game(0)
 		resume_game()
 
 

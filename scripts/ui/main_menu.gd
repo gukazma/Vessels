@@ -80,9 +80,9 @@ func _on_continue_pressed() -> void:
 	print("[MainMenu] 继续游戏")
 	continue_game_requested.emit()
 
-	# 加载存档
+	# 加载存档 (默认使用槽位 0)
 	if SaveManager:
-		SaveManager.load_game()
+		SaveManager.load_game(0)
 
 
 func _on_settings_pressed() -> void:

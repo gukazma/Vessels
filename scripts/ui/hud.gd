@@ -260,7 +260,7 @@ func clear_messages() -> void:
 ## ==================== 公共方法 ====================
 
 ## 显示/隐藏 HUD
-func set_visible(visible: bool) -> void:
+func set_hud_visible(visible: bool) -> void:
 	for child in get_children():
 		if child is Control:
 			child.visible = visible

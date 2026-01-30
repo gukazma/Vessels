@@ -1,7 +1,7 @@
 # container.gd
 # 容器 - 可搜刮物品
 # 继承 Interactable 基类
-class_name Container
+class_name LootContainer
 extends Interactable
 
 ## ==================== 信号 ====================
