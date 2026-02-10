@@ -2,15 +2,10 @@
 .godot/
 *.import
 
-# MCP server (submodule)
-.godot-mcp/
-
-# Screenshots (generated)
-screenshots/
-
 # OS
-.DS_Store
+nul
 Thumbs.db
+.DS_Store
 
 # IDE
 .vscode/

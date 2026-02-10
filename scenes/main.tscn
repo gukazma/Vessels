@@ -1,25 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://dp8x2qvk5y7lc"]
+[gd_scene load_steps=2 format=3]
 
-[ext_resource type="Script" path="res://scripts/screenshot_manager.gd" id="1_screenshot"]
-[ext_resource type="Script" path="res://scripts/auto_test.gd" id="2_autotest"]
-[ext_resource type="PackedScene" uid="uid://main_menu_scene_001" path="res://scenes/ui/main_menu.tscn" id="3_main_menu"]
-[ext_resource type="PackedScene" uid="uid://profession_select_scene_001" path="res://scenes/ui/profession_select.tscn" id="4_profession_select"]
-[ext_resource type="PackedScene" uid="uid://game_world_scene_001" path="res://scenes/game/game_world.tscn" id="5_game_world"]
+[ext_resource type="PackedScene" path="res://scenes/entities/player.tscn" id="1"]
 
-[node name="Main" type="Node"]
+[node name="Main" type="Node2D"]
 
-[node name="ScreenshotManager" type="Node" parent="."]
-script = ExtResource("1_screenshot")
-
-[node name="AutoTest" type="Node" parent="."]
-script = ExtResource("2_autotest")
-
-[node name="SceneContainer" type="Node" parent="."]
-
-[node name="MainMenu" parent="SceneContainer" instance=ExtResource("3_main_menu")]
-
-[node name="ProfessionSelect" parent="SceneContainer" instance=ExtResource("4_profession_select")]
-visible = false
-
-[node name="GameWorld" parent="SceneContainer" instance=ExtResource("5_game_world")]
-visible = false
+[node name="Player" parent="." instance=ExtResource("1")]
+position = Vector2(640, 360)
