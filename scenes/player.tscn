@@ -2,6 +2,9 @@
 
 [ext_resource type="Texture2D" uid="uid://34oqx1s7s0d4" path="res://assets/characters/basic_charakter_spritesheet.png" id="1_tex"]
 [ext_resource type="Script" path="res://scripts/player.gd" id="2_scr"]
+[ext_resource type="Script" path="res://scripts/state_machine/node_state_machine.gd" id="3_nsm"]
+[ext_resource type="Script" path="res://scripts/characters/player/idle_state.gd" id="4_idle"]
+[ext_resource type="Script" path="res://scripts/characters/player/walk_state.gd" id="5_walk"]
 
 ; 每帧 48x48，4列 x 4行
 ; Row 0 (y=0)   : Down  (front)   col0-1=idle, col2-3=walk
@@ -189,3 +192,17 @@ animation = &"idle_front"
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, -8)
 shape = SubResource("CircleShape2D_player")
+
+; NodeStateMachine 是状态机管理器，所有状态节点挂在它下面
+[node name="NodeStateMachine" type="Node" parent="."]
+script = ExtResource("3_nsm")
+initial_state_name = "Idle"
+
+; Idle 状态：player 和 animated_sprite_2d 通过 NodePath 指向父/兄弟节点
+[node name="Idle" type="Node" parent="NodeStateMachine"]
+script = ExtResource("4_idle")
+
+; Walk 状态：speed 可在编辑器中调整
+[node name="Walk" type="Node" parent="NodeStateMachine"]
+script = ExtResource("5_walk")
+speed = 50
