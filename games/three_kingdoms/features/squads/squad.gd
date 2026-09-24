@@ -16,6 +16,11 @@ const FORMATION_SPEED: float = 58.0
 @export var squad_name: String = "Squad"
 @export var accent: Color = Color("689a8a")
 @export_range(1.0, 400.0, 1.0) var walk_speed: float = 105.0
+@export var team: int = 0
+@export var definition: UnitDefinition
+
+var max_health: float = 252.0
+var health: float = 252.0
 
 var _selected: bool = false
 var _moving: bool = false
@@ -27,16 +32,77 @@ var _facing: Vector2 = Vector2.UP
 var _desired_facing: Vector2 = Vector2.UP
 var _member_offsets: PackedVector2Array = PackedVector2Array()
 var _stride: float = 0.0
+var _attack_flash: float = 0.0
+var _attack_target: Vector2
 
 
 func _ready() -> void:
 	_destination = global_position
+	if definition != null:
+		configure(definition, team)
 	_initialize_formation()
 	queue_redraw()
 
 
+func configure(unit: UnitDefinition, faction: int) -> void:
+	definition = unit
+	team = faction
+	walk_speed = unit.move_speed if unit != null else 105.0
+	max_health = (unit.member_health if unit != null else 36.0) * FORMATION.size()
+	restore()
+
+
+func living_members() -> int:
+	# Losses remove the last formation slot first; slot zero is the flag bearer.
+	if health <= 0.0:
+		return 0
+	return clampi(ceili(health / (max_health / FORMATION.size())), 1, FORMATION.size())
+
+
+func is_alive() -> bool:
+	return health > 0.0
+
+
+func take_damage(amount: float) -> void:
+	if not is_finite(amount) or amount <= 0.0 or not is_alive():
+		return
+	health = maxf(0.0, health - amount)
+	if not is_alive():
+		stop()
+		_selected = false
+		_attack_flash = 0.0
+	queue_redraw()
+
+
+func restore() -> void:
+	health = max_health
+	_attack_flash = 0.0
+	_stride = 0.0
+	_facing = Vector2.UP
+	_desired_facing = Vector2.UP
+	_initialize_formation()
+	stop()
+	queue_redraw()
+
+
+func face_direction(direction: Vector2) -> void:
+	if not is_alive() or not direction.is_finite() or direction.is_zero_approx():
+		return
+	_desired_facing = direction.normalized()
+	_formation_frozen = false
+
+
+func flash_attack(target: Vector2) -> void:
+	if not is_alive() or not target.is_finite():
+		return
+	_attack_target = target
+	_attack_flash = 0.14
+	face_direction(target - global_position)
+	queue_redraw()
+
+
 func set_selected(selected: bool) -> void:
-	_selected = selected
+	_selected = selected and is_alive()
 	queue_redraw()
 
 
@@ -45,7 +111,7 @@ func is_selected() -> bool:
 
 
 func issue_move(target: Vector2, path: PackedVector2Array = PackedVector2Array()) -> void:
-	if not target.is_finite():
+	if not is_alive() or not target.is_finite():
 		return
 	var valid_path: PackedVector2Array = PackedVector2Array()
 	for waypoint: Vector2 in path:
@@ -63,6 +129,7 @@ func issue_move(target: Vector2, path: PackedVector2Array = PackedVector2Array()
 
 func stop() -> void:
 	_moving = false
+	_attack_flash = 0.0
 	_path.clear()
 	_path_index = 0
 	_destination = global_position
@@ -80,12 +147,15 @@ func destination() -> Vector2:
 
 func get_member_positions() -> PackedVector2Array:
 	var positions: PackedVector2Array = PackedVector2Array()
-	for offset: Vector2 in _member_offsets:
-		positions.append(to_global(offset))
+	for member: int in mini(living_members(), _member_offsets.size()):
+		positions.append(to_global(_member_offsets[member]))
 	return positions
 
 
 func _physics_process(delta: float) -> void:
+	if not is_alive():
+		return
+	_attack_flash = maxf(0.0, _attack_flash - delta)
 	var previous_position: Vector2 = global_position
 	if _moving:
 		_advance_path(walk_speed * delta)
@@ -137,23 +207,38 @@ func _update_formation(delta: float) -> void:
 
 
 func _draw() -> void:
-	if _member_offsets.is_empty():
+	if _member_offsets.is_empty() or not is_alive():
 		return
 	if _selected:
 		_draw_selection()
-	for member: int in _member_offsets.size():
+	for member: int in living_members():
 		var offset: Vector2 = _member_offsets[member]
 		draw_circle(offset + Vector2(1.0, 2.0), 4.3 if member == 0 else 3.2,
 			Color(0.08, 0.12, 0.13, 0.25))
 	# Sort inside this one squad so a lower soldier covers a higher soldier's spear.
 	var draw_order: Array[int] = []
-	for member: int in _member_offsets.size():
+	for member: int in living_members():
 		draw_order.append(member)
 	draw_order.sort_custom(func(a: int, b: int) -> bool:
 		return _member_offsets[a].y < _member_offsets[b].y
 	)
 	for member: int in draw_order:
 		_draw_member(member)
+	if definition != null:
+		draw_rect(Rect2(-19.0, -31.0, 38.0, 4.0), Color("263e43"))
+		draw_rect(Rect2(-18.0, -30.0, 36.0 * health / max_health, 2.0), accent.lightened(0.35))
+		var font: Font = ThemeDB.fallback_font
+		var caption: String = "%s %d" % [definition.display_name, living_members()]
+		var width: float = font.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+		draw_string(font, Vector2(-width * 0.5, -36.0), caption,
+			HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("263e43"))
+	if _attack_flash > 0.0:
+		var end: Vector2 = to_local(_attack_target)
+		var color: Color = Color("f5d68a", _attack_flash / 0.14)
+		if definition != null and definition.ranged:
+			draw_line(Vector2.ZERO, end, color, 1.4)
+		else:
+			draw_arc(end * 0.5, 10.0, end.angle() - 0.8, end.angle() + 0.8, 6, color, 2.0)
 
 
 func _draw_selection() -> void:

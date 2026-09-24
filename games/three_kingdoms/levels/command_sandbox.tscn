@@ -1,14 +1,17 @@
-[gd_scene load_steps=5 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://levels/command_sandbox.gd" id="level"]
 [ext_resource type="Script" path="res://features/input/battle_orders.gd" id="input"]
 [ext_resource type="Script" path="res://features/camera/battle_camera.gd" id="camera"]
 [ext_resource type="Script" path="res://features/ui/command_hud.gd" id="hud"]
+[ext_resource type="Script" path="res://features/combat/battle_combat.gd" id="combat"]
 
 [node name="CommandSandbox" type="Node2D"]
+process_mode = 3
 script = ExtResource("level")
 
 [node name="Squads" type="Node2D" parent="."]
+process_mode = 1
 y_sort_enabled = true
 
 [node name="Camera" type="Camera2D" parent="."]
@@ -21,3 +24,7 @@ script = ExtResource("input")
 
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("hud")
+
+[node name="Combat" type="Node" parent="."]
+process_mode = 1
+script = ExtResource("combat")

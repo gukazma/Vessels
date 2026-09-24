@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="UnitDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://features/combat/unit_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"shield_infantry"
+display_name = "盾步兵"
+member_health = 36.0
+damage_per_member = 3.0
+attack_interval = 1.0
+attack_range = 58.0
+move_speed = 88.0
+ranged_damage_multiplier = 0.65

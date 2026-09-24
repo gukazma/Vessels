@@ -35,3 +35,4 @@ foreach ($tickRate in @(60, 120)) {
 }
 Invoke-GodotCheck -Name 'scene-check' -EngineArguments @('--quit-after', '120')
 Write-Output 'Import, movement, inventory/combat, weapon presentation, and main scene startup passed.'
+& (Join-Path $projectRoot 'games/three_kingdoms/tools/check.ps1') -Godot $engine

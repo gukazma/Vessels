@@ -1,33 +1,57 @@
 # 三国 · 战术试验场
 
-这是独立于旧项目的《英雄连》式三国小队战术原型。旧的丧尸生存项目仍在根目录运行；本项目从灰盒战场开始，不复用旧项目的玩法或美术。
+这是独立于旧项目的《英雄连》式三国小队战术原型。打开本目录的 `project.godot`，使用 Godot 4.6.1 运行。当前先验证玩法，使用灰盒战场与占位角色。
 
-## M0：指挥与移动
+## 当前阶段：M1 第一场遭遇战
 
-打开 `games/three_kingdoms/project.godot`，运行 `levels/command_sandbox.tscn`。
+默认入口为 `levels/encounter.tscn`：双方各一队盾步兵和一队弓兵，每队 7 人。盾兵承担近战和远程火力，弓兵保持距离输出；伤亡会减少后续输出。全部敌军被消灭即胜利，我军全部被消灭即失败，双方同时被消灭则平局。结束显示伤亡，可随时重开。
+
+M1 已实现并通过检查，待用户试玩调参。详细数值、规则边界、三个对照练习见 [第一场遭遇战玩法规格](../../docs/three-kingdoms/first-battle-rules.md)；完整路线见 [从 0 到 1 开发方案](../../docs/three-kingdoms/development-plan.md)。
 
 | 操作 | 输入 |
 | --- | --- |
-| 选择小队 | 左键点击 |
+| 选择友方存活小队 | 左键点击 |
 | 框选 | 按住左键拖拽 |
 | 加选 / 取消单队 | Shift + 点击或框选 |
-| 移动 | 右键 |
-| 停止 | X |
+| 快捷选队 / 全选 | 1 盾步兵，2 弓兵；Tab 全选 |
+| 移动 / 指定攻击 | 右键空地 / 敌军；替换旧命令 |
+| 追加移动或攻击 | Shift + 右键，每队最多 16 条命令（含当前命令） |
+| 清空命令并原地守卫 | X |
+| 战术暂停 / 恢复 | Space；暂停中仍可选队和下令 |
 | 聚焦选中部队 | F |
 | 清除选择 | Esc |
-| 重置场景 | R |
+| 重开遭遇战 | R |
 | 镜头平移 | WASD 或鼠标中键拖拽 |
 | 镜头缩放 | 鼠标滚轮 |
 
-当前每支小队包含一名带旗主将和六名士兵。右键命令由中心路径导航处理，会为编队预留 28 像素障碍距离，经过中央障碍后在目标附近分配间距。M0 暂不包含伤害、兵种、士气、资源、招募或攻城。
+移动命令不会自动停下攻击；指定攻击会接近目标；原地守卫只打射程内且没有墙体遮挡的目标，不主动追远。墙体阻挡近战和远程攻击。暂停时移动、伤害和攻击冷却均不推进。
+
+本轮不含侧翼防护、掩体加成、士气、主动撤退、招募、资源与攻城。盾兵的远程减伤暂时全向；领队是最后阵亡的普通成员，尚不是独立武将系统。两军实力对等，先验证战斗职责和操作，不宣称已经实现以弱胜强的平衡。
+
+## M0 指挥训练场
+
+`levels/command_sandbox.tscn` 保留三支友方小队，用于练习选择、队形、移动、绕障碍与镜头。可在 Godot 编辑器中打开该场景，按 F6 单独运行。训练场没有敌军或伤害。
 
 ## 检查
 
+在仓库根目录执行统一检查：
+
 ```powershell
-$godot = 'C:\Program Files\Godot\Godot.exe'
-& $godot --headless --path games/three_kingdoms --script res://tests/navigation_test.gd
-& $godot --headless --path games/three_kingdoms --fixed-fps 60 --script res://tests/command_test.gd -- --ticks=60
-& $godot --headless --path games/three_kingdoms --fixed-fps 120 --script res://tests/command_test.gd -- --ticks=120
+./tools/check.ps1 -Godot 'C:\Program Files\Godot\Godot.exe'
 ```
 
-代码测试通过后仍需实际试玩。M0 的反馈重点是：选择是否清楚、移动是否有响应、绕障碍是否自然、队伍间距是否舒服、镜头速度是否合适。
+只检查独立三国项目：
+
+```powershell
+./games/three_kingdoms/tools/check.ps1 -Godot 'C:\Program Files\Godot\Godot.exe'
+```
+
+检查覆盖导航、60 / 120 Hz 下的指挥与交战、实际键鼠事件下的暂停和命令队列、完整遭遇战、伤亡与结果，以及入口场景运行。检查通过后仍需用户试玩。反馈优先描述：接战是否太快或太慢、弓兵是否容易保持距离、切换目标是否有价值、暂停排队是否符合预期，以及重开换打法后损失是否改变。
+
+使用实际渲染器核对部署、交战、暂停和结算画面：
+
+```powershell
+& 'C:\Program Files\Godot\Godot.exe' --path ./games/three_kingdoms --fixed-fps 60 --script res://tools/capture_encounter_preview.gd
+```
+
+截图生成在新项目的 `.godot/` 内，不提交缓存。小队当前允许互相穿行，尚未实现实体阻挡；屏幕上的兵种、人数、血条与受压提示用于检查规则可读性。
