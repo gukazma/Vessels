@@ -30,5 +30,9 @@ foreach ($ticks in @(60, 120)) {
         'res://tests/combat_test.gd', '--', "--ticks=$ticks")
     Invoke-TacticsCheck "encounter-input-$ticks" @('--fixed-fps', "$ticks", '--script',
         'res://tests/encounter_input_test.gd', '--', "--ticks=$ticks")
+    Invoke-TacticsCheck "directional-combat-$ticks" @('--fixed-fps', "$ticks", '--script',
+        'res://tests/directional_combat_test.gd', '--', "--ticks=$ticks")
+    Invoke-TacticsCheck "cover-input-$ticks" @('--fixed-fps', "$ticks", '--script',
+        'res://tests/cover_input_test.gd', '--', "--ticks=$ticks")
 }
 Invoke-TacticsCheck 'encounter-startup' @('--quit-after', '120')

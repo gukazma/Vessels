@@ -16,11 +16,13 @@ const FORMATION_SPEED: float = 58.0
 @export var squad_name: String = "Squad"
 @export var accent: Color = Color("689a8a")
 @export_range(1.0, 400.0, 1.0) var walk_speed: float = 105.0
+@export_range(0.05, 20.0) var turn_speed: float = TURN_SPEED
 @export var team: int = 0
 @export var definition: UnitDefinition
 
 var max_health: float = 252.0
 var health: float = 252.0
+var show_facing: bool = false
 
 var _selected: bool = false
 var _moving: bool = false
@@ -34,6 +36,8 @@ var _member_offsets: PackedVector2Array = PackedVector2Array()
 var _stride: float = 0.0
 var _attack_flash: float = 0.0
 var _attack_target: Vector2
+var _defense_flash: float = 0.0
+var _defense_label: String = ""
 
 
 func _ready() -> void:
@@ -77,6 +81,8 @@ func take_damage(amount: float) -> void:
 func restore() -> void:
 	health = max_health
 	_attack_flash = 0.0
+	_defense_flash = 0.0
+	_defense_label = ""
 	_stride = 0.0
 	_facing = Vector2.UP
 	_desired_facing = Vector2.UP
@@ -92,12 +98,32 @@ func face_direction(direction: Vector2) -> void:
 	_formation_frozen = false
 
 
+func facing_direction() -> Vector2:
+	return _facing
+
+
+func set_facing_immediate(direction: Vector2) -> void:
+	if not direction.is_finite() or direction.is_zero_approx():
+		return
+	_facing = direction.normalized()
+	_desired_facing = _facing
+	_initialize_formation()
+	queue_redraw()
+
+
+func flash_defense(label: String) -> void:
+	if not is_alive():
+		return
+	_defense_label = label
+	_defense_flash = 1.0
+	queue_redraw()
+
+
 func flash_attack(target: Vector2) -> void:
 	if not is_alive() or not target.is_finite():
 		return
 	_attack_target = target
 	_attack_flash = 0.14
-	face_direction(target - global_position)
 	queue_redraw()
 
 
@@ -156,6 +182,7 @@ func _physics_process(delta: float) -> void:
 	if not is_alive():
 		return
 	_attack_flash = maxf(0.0, _attack_flash - delta)
+	_defense_flash = maxf(0.0, _defense_flash - delta)
 	var previous_position: Vector2 = global_position
 	if _moving:
 		_advance_path(walk_speed * delta)
@@ -198,7 +225,7 @@ func _slot_offset(slot: Vector2) -> Vector2:
 
 
 func _update_formation(delta: float) -> void:
-	var angle: float = rotate_toward(_facing.angle(), _desired_facing.angle(), TURN_SPEED * delta)
+	var angle: float = rotate_toward(_facing.angle(), _desired_facing.angle(), turn_speed * delta)
 	_facing = Vector2.from_angle(angle)
 	for member: int in _member_offsets.size():
 		_member_offsets[member] = _member_offsets[member].move_toward(
@@ -211,6 +238,8 @@ func _draw() -> void:
 		return
 	if _selected:
 		_draw_selection()
+	if show_facing:
+		_draw_facing()
 	for member: int in living_members():
 		var offset: Vector2 = _member_offsets[member]
 		draw_circle(offset + Vector2(1.0, 2.0), 4.3 if member == 0 else 3.2,
@@ -239,6 +268,20 @@ func _draw() -> void:
 			draw_line(Vector2.ZERO, end, color, 1.4)
 		else:
 			draw_arc(end * 0.5, 10.0, end.angle() - 0.8, end.angle() + 0.8, 6, color, 2.0)
+	if _defense_flash > 0.0:
+		draw_string(ThemeDB.fallback_font, Vector2(-24.0, 38.0), _defense_label,
+			HORIZONTAL_ALIGNMENT_CENTER, 48.0, 12, Color("263e43"))
+
+
+func _draw_facing() -> void:
+	var right: Vector2 = Vector2(-_facing.y, _facing.x)
+	var tip: Vector2 = _facing * 30.0
+	draw_line(_facing * 22.0, tip, accent.darkened(0.3), 1.5)
+	draw_line(tip, tip - _facing * 5.0 + right * 3.0, accent.darkened(0.3), 1.5)
+	draw_line(tip, tip - _facing * 5.0 - right * 3.0, accent.darkened(0.3), 1.5)
+	if definition != null and definition.ranged_damage_multiplier < 1.0:
+		draw_arc(Vector2.ZERO, 25.0, _facing.angle() - PI / 3.0, _facing.angle() + PI / 3.0,
+			16, Color(accent.r, accent.g, accent.b, 0.7), 2.0)
 
 
 func _draw_selection() -> void:

@@ -12,6 +12,8 @@ const REPATH_INTERVAL: float = 0.4
 const ARCHER_PRESSURE_RANGE: float = 70.0
 const ARCHER_PRESSURE_MULTIPLIER: float = 0.35
 const EPSILON: float = 0.0001
+const SHIELD_FRONT_DOT: float = 0.5
+const ATTACK_FRONT_DOT: float = 0.8660254
 
 enum OrderKind { MOVE, ATTACK }
 
@@ -31,6 +33,8 @@ class SquadState:
 	var target: TacticalSquad
 	var returning: bool = false
 	var holding: bool = false
+	var facing_locked: bool = false
+	var guard_direction: Vector2 = Vector2.UP
 	var index: int = 0
 
 var _navigation: BattleNavigation
@@ -39,12 +43,16 @@ var _units: Array[TacticalSquad] = []
 var _states: Dictionary = {}
 var _finished: bool = false
 var _contested: bool = false
+var _covers: Array[TacticalCover] = []
+var directional_defense_enabled: bool = false
 
 
-func configure(navigation: BattleNavigation, obstacles: Array[Rect2], units: Array[TacticalSquad]) -> void:
+func configure(navigation: BattleNavigation, obstacles: Array[Rect2], units: Array[TacticalSquad],
+		covers: Array[TacticalCover] = []) -> void:
 	_navigation = navigation
 	_obstacles.assign(obstacles)
 	_units.assign(units)
+	_covers.assign(covers)
 	_states.clear()
 	_finished = false
 	var teams: Dictionary = {}
@@ -57,6 +65,8 @@ func configure(navigation: BattleNavigation, obstacles: Array[Rect2], units: Arr
 		state.index = index
 		_states[squad.get_instance_id()] = state
 		teams[squad.team] = true
+		squad.turn_speed = PI if directional_defense_enabled else TacticalSquad.TURN_SPEED
+		squad.show_facing = directional_defense_enabled
 		squad.stop()
 	_contested = teams.has(0) and teams.has(1)
 
@@ -100,8 +110,21 @@ func order_stop(squad: TacticalSquad) -> void:
 	state.target = null
 	state.returning = false
 	state.holding = true
+	state.facing_locked = false
 	state.repath = 0.0
 	squad.stop()
+
+
+func order_face(squad: TacticalSquad, direction: Vector2) -> bool:
+	if not directional_defense_enabled or not _can_order(squad, false) \
+			or not direction.is_finite() or direction.is_zero_approx():
+		return false
+	order_stop(squad)
+	var state: SquadState = _state(squad)
+	state.facing_locked = true
+	state.guard_direction = direction.normalized()
+	squad.face_direction(state.guard_direction)
+	return true
 
 
 func order_label(squad: TacticalSquad) -> String:
@@ -110,6 +133,8 @@ func order_label(squad: TacticalSquad) -> String:
 	var state: SquadState = _state(squad)
 	if state == null or _finished:
 		return "待命"
+	if state.facing_locked:
+		return "定向守卫"
 	if not state.orders.is_empty():
 		return "移动" if state.orders[0].kind == OrderKind.MOVE else "进攻"
 	if state.returning:
@@ -123,8 +148,19 @@ func queue_size(squad: TacticalSquad) -> int:
 
 
 func is_under_pressure(squad: TacticalSquad) -> bool:
-	return is_instance_valid(squad) and squad.is_alive() and squad.definition != null \
-		and squad.definition.ranged and _nearest_enemy(squad, ARCHER_PRESSURE_RANGE) != null
+	if not is_instance_valid(squad) or not squad.is_alive() or squad.definition == null \
+			or not squad.definition.ranged:
+		return false
+	if not directional_defense_enabled:
+		return _nearest_enemy(squad, ARCHER_PRESSURE_RANGE) != null
+	for enemy: TacticalSquad in _units:
+		if not _valid_enemy(squad, enemy):
+			continue
+		if squad.global_position.distance_to(enemy.global_position) <= ARCHER_PRESSURE_RANGE \
+				and has_line_of_sight(squad.global_position, enemy.global_position) \
+				and not _crosses_cover(squad.global_position, enemy.global_position):
+			return true
+	return false
 
 
 func has_line_of_sight(from: Vector2, to: Vector2) -> bool:
@@ -134,6 +170,54 @@ func has_line_of_sight(from: Vector2, to: Vector2) -> bool:
 		if _segment_hits_rect(from, to, obstacle.abs()):
 			return false
 	return true
+
+
+func cover_at(squad: TacticalSquad) -> TacticalCover:
+	if not is_instance_valid(squad) or not squad.is_alive():
+		return null
+	var best: TacticalCover
+	for cover: TacticalCover in _covers:
+		if cover != null and cover.contains(squad.global_position) \
+				and (best == null or cover.ranged_multiplier < best.ranged_multiplier):
+			best = cover
+	return best
+
+
+func attack_preview(squad: TacticalSquad, target: TacticalSquad) -> Dictionary:
+	# Damage is the theoretical volley at these positions; separate validity
+	# flags let the HUD explain range and blocked attacks without firing a shot.
+	var preview: Dictionary = {"damage": 0.0, "shielded": false, "covered": false,
+		"blocked": true, "in_range": false, "under_pressure": false, "flanked": false,
+		"aligned": not directional_defense_enabled}
+	if not is_instance_valid(squad) or not squad.is_alive() or squad.definition == null \
+			or not is_instance_valid(target) or not target.is_alive() or squad.team == target.team:
+		return preview
+	var source_at: Vector2 = squad.global_position
+	var target_at: Vector2 = target.global_position
+	preview["blocked"] = not _attack_path_clear(squad, source_at, target_at)
+	preview["in_range"] = source_at.distance_to(target_at) <= _attack_range(squad) + EPSILON
+	preview["aligned"] = not directional_defense_enabled or _within_arc(
+		squad.facing_direction(), target_at - source_at, ATTACK_FRONT_DOT)
+	var damage: float = squad.definition.damage_per_member * squad.living_members()
+	if squad.definition.ranged:
+		var protection: float = 1.0
+		if target.definition != null and target.definition.ranged_damage_multiplier < 1.0:
+			var shield_faces_source: bool = not directional_defense_enabled or _within_arc(
+				target.facing_direction(), source_at - target_at, SHIELD_FRONT_DOT)
+			preview["shielded"] = shield_faces_source
+			preview["flanked"] = not shield_faces_source
+			if shield_faces_source:
+				protection = target.definition.ranged_damage_multiplier
+		for cover: TacticalCover in _covers:
+			if cover != null and cover.protects(source_at, target_at):
+				preview["covered"] = true
+				protection = minf(protection, cover.ranged_multiplier)
+		damage *= protection
+		preview["under_pressure"] = is_under_pressure(squad)
+		if preview["under_pressure"]:
+			damage *= ARCHER_PRESSURE_MULTIPLIER
+	preview["damage"] = damage
+	return preview
 
 
 func _physics_process(delta: float) -> void:
@@ -157,12 +241,23 @@ func _physics_process(delta: float) -> void:
 			continue
 		if not _can_hit(squad, state.target):
 			continue
-		squad.face_direction(state.target.global_position - squad.global_position)
+		var direction: Vector2 = state.target.global_position - squad.global_position
+		squad.face_direction(state.guard_direction if state.facing_locked else direction)
+		var preview: Dictionary = attack_preview(squad, state.target)
+		if not preview["aligned"]:
+			continue
 		if state.cooldown > EPSILON:
 			continue
-		var amount: float = _attack_damage(squad, state.target)
+		var amount: float = float(preview["damage"])
 		var key: int = state.target.get_instance_id()
 		damage[key] = float(damage.get(key, 0.0)) + amount
+		if directional_defense_enabled and amount > 0.0:
+			if preview["covered"]:
+				state.target.flash_defense("掩体")
+			elif preview["shielded"]:
+				state.target.flash_defense("盾挡")
+			elif preview["flanked"]:
+				state.target.flash_defense("侧袭")
 		state.cooldown = maxf(0.05, squad.definition.attack_interval)
 		squad.flash_attack(state.target.global_position)
 	for squad: TacticalSquad in _units:
@@ -193,6 +288,7 @@ func _enqueue(squad: TacticalSquad, order: BattleOrder, append: bool) -> void:
 		state.repath = 0.0
 	state.returning = false
 	state.holding = false
+	state.facing_locked = false
 	state.orders.append(order)
 	if state.orders.size() == 1:
 		_update_orders(squad, state)
@@ -227,6 +323,10 @@ func _update_orders(squad: TacticalSquad, state: SquadState) -> void:
 
 
 func _update_guard(squad: TacticalSquad, state: SquadState) -> void:
+	if state.facing_locked:
+		squad.face_direction(state.guard_direction)
+		state.target = _nearest_enemy(squad, _attack_range(squad), state.guard_direction)
+		return
 	if squad.team != 1 or state.holding:
 		state.target = _nearest_enemy(squad, _attack_range(squad)) if not squad.is_moving() else null
 		return
@@ -290,7 +390,7 @@ func _engagement_path(squad: TacticalSquad, state: SquadState) -> PackedVector2A
 	var best_cost: float = INF
 	for step: int in 12:
 		var candidate: Vector2 = target_at + Vector2.from_angle(base_angle + float(step) * TAU / 12.0) * radius
-		if not _navigation.is_walkable(candidate) or not has_line_of_sight(candidate, target_at):
+		if not _navigation.is_walkable(candidate) or not _attack_path_clear(squad, candidate, target_at):
 			continue
 		var path: PackedVector2Array = _navigation.find_path(squad.global_position, candidate)
 		if path.is_empty():
@@ -311,11 +411,14 @@ func _engagement_path(squad: TacticalSquad, state: SquadState) -> PackedVector2A
 	return best
 
 
-func _nearest_enemy(squad: TacticalSquad, radius: float) -> TacticalSquad:
+func _nearest_enemy(squad: TacticalSquad, radius: float, heading: Vector2 = Vector2.ZERO) -> TacticalSquad:
 	var target: TacticalSquad
 	var distance: float = radius * radius
 	for candidate: TacticalSquad in _units:
 		if not _valid_enemy(squad, candidate):
+			continue
+		if not heading.is_zero_approx() and not _within_arc(
+				heading, candidate.global_position - squad.global_position, ATTACK_FRONT_DOT):
 			continue
 		var candidate_distance: float = squad.global_position.distance_squared_to(candidate.global_position)
 		if candidate_distance <= distance and has_line_of_sight(squad.global_position, candidate.global_position):
@@ -336,17 +439,24 @@ func _attack_range(squad: TacticalSquad) -> float:
 func _can_hit(squad: TacticalSquad, target: TacticalSquad) -> bool:
 	return squad.definition != null \
 		and squad.global_position.distance_to(target.global_position) <= _attack_range(squad) + EPSILON \
-		and has_line_of_sight(squad.global_position, target.global_position)
+		and _attack_path_clear(squad, squad.global_position, target.global_position)
 
 
-func _attack_damage(squad: TacticalSquad, target: TacticalSquad) -> float:
-	var damage: float = squad.definition.damage_per_member * squad.living_members()
-	if squad.definition.ranged:
-		if target.definition != null:
-			damage *= target.definition.ranged_damage_multiplier
-		if is_under_pressure(squad):
-			damage *= ARCHER_PRESSURE_MULTIPLIER
-	return damage
+func _attack_path_clear(squad: TacticalSquad, from: Vector2, to: Vector2) -> bool:
+	if not has_line_of_sight(from, to):
+		return false
+	return squad.definition == null or squad.definition.ranged or not _crosses_cover(from, to)
+
+
+func _crosses_cover(from: Vector2, to: Vector2) -> bool:
+	for cover: TacticalCover in _covers:
+		if cover != null and _segment_hits_rect(from, to, cover.bounds()):
+			return true
+	return false
+
+
+func _within_arc(heading: Vector2, offset: Vector2, threshold: float) -> bool:
+	return offset.is_zero_approx() or heading.normalized().dot(offset.normalized()) >= threshold - EPSILON
 
 
 func _check_result() -> void:

@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://levels/command_sandbox.tscn" id="sandbox"]
+[ext_resource type="Script" path="res://levels/cover_encounter.gd" id="cover"]
+
+[node name="CoverEncounter" instance=ExtResource("sandbox")]
+script = ExtResource("cover")
+combat_enabled = true
+cover_enabled = true
+
+[node name="Camera" parent="." index="1"]
+position = Vector2(900, 550)

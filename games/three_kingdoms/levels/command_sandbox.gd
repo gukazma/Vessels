@@ -16,6 +16,10 @@ const ARCHERS: UnitDefinition = preload("res://data/units/archers.tres")
 const ALLIED_STARTS: Array[Vector2] = [Vector2(560, 490), Vector2(460, 570)]
 const ENEMY_STARTS: Array[Vector2] = [Vector2(1190, 490), Vector2(1290, 570)]
 @export var combat_enabled: bool = false
+@export var cover_enabled: bool = false
+var obstacles: Array[Rect2] = []
+var covers: Array[TacticalCover] = []
+var pointer_screen: Vector2 = Vector2(-1, -1)
 var squads: Array[TacticalSquad] = []
 var enemies: Array[TacticalSquad] = []
 var battle_finished: bool = false
@@ -29,13 +33,17 @@ var _marker_lifetime: float = 0.0
 
 
 func _ready() -> void:
-	navigation.setup(WORLD_BOUNDS, OBSTACLES, 28.0)
+	_setup_terrain()
+	var movement_obstacles: Array[Rect2] = obstacles.duplicate()
+	for cover: TacticalCover in covers:
+		movement_obstacles.append(cover.bounds())
+	navigation.setup(WORLD_BOUNDS, movement_obstacles, 28.0)
 	camera.world_bounds = WORLD_BOUNDS
 	combat.battle_ended.connect(_on_battle_ended)
 	if combat_enabled:
-		_spawn_army(squads, ALLIED_STARTS, 0)
-		_spawn_army(enemies, ENEMY_STARTS, 1)
-		combat.configure(navigation, OBSTACLES, _all_units())
+		_spawn_army(squads, allied_start_positions(), 0)
+		_spawn_army(enemies, enemy_start_positions(), 1)
+		_configure_combat()
 		select_index(0)
 		return
 	combat.set_physics_process(false)
@@ -49,6 +57,58 @@ func _ready() -> void:
 		$Squads.add_child(squad)
 		squads.append(squad)
 	select_at(STARTS[0])
+
+
+func _setup_terrain() -> void:
+	obstacles.assign(OBSTACLES)
+
+
+func allied_start_positions() -> Array[Vector2]:
+	return ALLIED_STARTS
+
+
+func enemy_start_positions() -> Array[Vector2]:
+	return ENEMY_STARTS
+
+
+func _configure_combat() -> void:
+	combat.directional_defense_enabled = cover_enabled
+	combat.configure(navigation, obstacles, _all_units(), covers)
+
+
+func switch_scenario(use_cover: bool) -> void:
+	var path: String = "res://levels/cover_encounter.tscn" if use_cover else "res://levels/encounter.tscn"
+	var was_paused: bool = get_tree().paused
+	get_tree().paused = false
+	var error: Error = get_tree().change_scene_to_file(path)
+	if error != OK:
+		get_tree().paused = was_paused
+		order_feedback.emit("关卡切换失败，请重试。")
+
+
+func face_selected(at: Vector2) -> bool:
+	if not cover_enabled or battle_finished or not at.is_finite():
+		return false
+	var accepted: int = 0
+	for squad: TacticalSquad in selected_squads():
+		if combat.order_face(squad, at - squad.global_position):
+			accepted += 1
+	if accepted > 0:
+		_order_markers.clear()
+		order_feedback.emit("%d 队定向守卫：箭头方向接敌；X 恢复自动转向。" % accepted)
+	else:
+		order_feedback.emit("先选择部队，再将鼠标指向防守方向按 Q。")
+	return accepted > 0
+
+
+func hovered_enemy() -> TacticalSquad:
+	if not cover_enabled or pointer_screen.x < 0 or hud_blocks_screen(pointer_screen):
+		return null
+	var at: Vector2 = get_canvas_transform().affine_inverse() * pointer_screen
+	for enemy: TacticalSquad in enemies:
+		if enemy.is_alive() and enemy.position.distance_to(at) <= 36.0:
+			return enemy
+	return null
 
 
 func _spawn_army(army: Array[TacticalSquad], starts: Array[Vector2], team: int) -> void:
@@ -238,9 +298,9 @@ func reset_squads() -> void:
 	winner = -2
 	_order_markers.clear()
 	if combat_enabled:
-		_restore_army(squads, ALLIED_STARTS)
-		_restore_army(enemies, ENEMY_STARTS)
-		combat.configure(navigation, OBSTACLES, _all_units())
+		_restore_army(squads, allied_start_positions())
+		_restore_army(enemies, enemy_start_positions())
+		_configure_combat()
 		combat.set_physics_process(true)
 		_order_markers.clear()
 		select_index(0)
@@ -297,7 +357,7 @@ func _draw() -> void:
 		draw_line(Vector2(0, y), Vector2(1800, y), Color(0.25, 0.32, 0.3, 0.07))
 	draw_rect(Rect2(200, 380, 490, 410), Color(0.28, 0.46, 0.44, 0.06))
 	draw_rect(Rect2(1090, 360, 420, 310), Color(0.7, 0.51, 0.3, 0.08))
-	for obstacle: Rect2 in OBSTACLES:
+	for obstacle: Rect2 in obstacles:
 		draw_rect(Rect2(obstacle.position + Vector2(8, 10), obstacle.size), Color(0.12, 0.2, 0.19, 0.13))
 		draw_rect(obstacle, Color("858c7c"))
 		draw_rect(obstacle.grow(-7), Color("9ea48e"))

@@ -3,7 +3,7 @@ config_version=5
 
 [application]
 config/name="三国 · 战术试验场"
-run/main_scene="res://levels/encounter.tscn"
+run/main_scene="res://levels/cover_encounter.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 
 [display]
@@ -29,6 +29,9 @@ tactical_pause={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode"
 select_squad_1={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":49)]}
 select_squad_2={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":50)]}
 select_squad_3={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":51)]}
+face_order={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":81)]}
+basic_encounter={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":4194332)]}
+cover_encounter={"deadzone":0.2,"events":[Object(InputEventKey,"physical_keycode":4194333)]}
 
 [rendering]
 renderer/rendering_method="gl_compatibility"

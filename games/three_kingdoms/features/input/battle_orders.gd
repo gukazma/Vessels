@@ -36,12 +36,24 @@ func _unhandled_input(event: InputEvent) -> void:
 		_battle.reset_squads()
 	elif event.is_action_pressed("tactical_pause"):
 		_battle.toggle_tactical_pause()
+	elif event.is_action_pressed("face_order"):
+		if get_viewport().get_visible_rect().has_point(_battle.pointer_screen) \
+				and not _battle.hud_blocks_screen(_battle.pointer_screen):
+			_battle.face_selected(_world(_battle.pointer_screen))
+	elif event.is_action_pressed("basic_encounter"):
+		cancel_selection()
+		_battle.switch_scenario(false)
+	elif event.is_action_pressed("cover_encounter"):
+		cancel_selection()
+		_battle.switch_scenario(true)
 	for index: int in range(3):
 		if event.is_action_pressed("select_squad_%d" % (index + 1)):
 			_battle.select_index(index)
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventMouse:
+		_battle.pointer_screen = event.position
 	# A release over HUD may be consumed before _unhandled_input; cancel that drag.
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT \
 			and not event.pressed and _selecting and _battle.hud_blocks_screen(event.position):
