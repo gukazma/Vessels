@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=5 format=3]
+[ext_resource type="Script" path="res://features/items/item_definition.gd" id="data"]
+[ext_resource type="Texture2D" path="res://assets/pixel/items/pistol.png" id="icon"]
+[ext_resource type="Texture2D" path="res://assets/pixel/weapons/pistol.png" id="held"]
+[ext_resource type="Texture2D" path="res://assets/pixel/weapons/pistol_axial.png" id="axial"]
+[resource]
+script = ExtResource("data")
+id = &"pistol"
+display_name = "9MM PISTOL"
+description = "A precise sidearm. Reload from 9mm ammunition in your pack."
+icon = ExtResource("icon")
+held_texture = ExtResource("held")
+held_axial_texture = ExtResource("axial")
+kind = 1
+ammo_id = &"ammo_9mm"
+magazine_size = 8
+damage = 24
+attack_range = 300.0
+attack_interval = 0.25
+reload_time = 0.9

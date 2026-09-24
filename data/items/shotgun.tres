@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=5 format=3]
+[ext_resource type="Script" path="res://features/items/item_definition.gd" id="data"]
+[ext_resource type="Texture2D" path="res://assets/pixel/items/shotgun.png" id="icon"]
+[ext_resource type="Texture2D" path="res://assets/pixel/weapons/shotgun.png" id="held"]
+[ext_resource type="Texture2D" path="res://assets/pixel/weapons/shotgun_axial.png" id="axial"]
+[resource]
+script = ExtResource("data")
+id = &"shotgun"
+display_name = "SHORT SHOTGUN"
+description = "Five pellets per shot. Each trigger pull uses one shell."
+icon = ExtResource("icon")
+held_texture = ExtResource("held")
+held_axial_texture = ExtResource("axial")
+held_axial_tip = Vector2(22, 9)
+held_tip = Vector2(23, 6)
+kind = 1
+ammo_id = &"shells"
+magazine_size = 2
+damage = 12
+attack_range = 170.0
+attack_interval = 0.8
+reload_time = 1.25
+pellets = 5
+spread_radians = 0.26

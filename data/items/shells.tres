@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3]
+[ext_resource type="Script" path="res://features/items/item_definition.gd" id="data"]
+[ext_resource type="Texture2D" path="res://assets/pixel/items/shells.png" id="icon"]
+[resource]
+script = ExtResource("data")
+id = &"shells"
+display_name = "SHOTGUN SHELLS"
+description = "Twelve-gauge shells. Keep a spare stack for the shotgun."
+icon = ExtResource("icon")
+max_stack = 20

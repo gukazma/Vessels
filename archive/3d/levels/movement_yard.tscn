@@ -1,0 +1,251 @@
+[gd_scene load_steps=16 format=3]
+
+[ext_resource type="PackedScene" path="res://features/player/player.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://levels/props/concrete_block.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://features/hud/movement_hud.tscn" id="3"]
+[ext_resource type="Script" path="res://levels/movement_yard.gd" id="4"]
+
+[sub_resource type="ProceduralSkyMaterial" id="SkyMaterial"]
+sky_top_color = Color(0.13, 0.23, 0.28, 1)
+sky_horizon_color = Color(0.55, 0.60, 0.55, 1)
+ground_bottom_color = Color(0.12, 0.16, 0.16, 1)
+ground_horizon_color = Color(0.55, 0.60, 0.55, 1)
+
+[sub_resource type="Sky" id="Sky"]
+sky_material = SubResource("SkyMaterial")
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 2
+sky = SubResource("Sky")
+ambient_light_source = 3
+ambient_light_color = Color(0.65, 0.77, 0.79, 1)
+ambient_light_energy = 0.45
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.43, 0.52, 0.5, 1)
+fog_density = 0.005
+
+[sub_resource type="StandardMaterial3D" id="Asphalt"]
+albedo_color = Color(0.13, 0.18, 0.19, 1)
+roughness = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Amber"]
+albedo_color = Color(0.86, 0.57, 0.22, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Dark"]
+albedo_color = Color(0.10, 0.14, 0.14, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Crate"]
+albedo_color = Color(0.32, 0.29, 0.19, 1)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="RoadMesh"]
+material = SubResource("Asphalt")
+size = Vector3(8, 0.015, 36)
+
+[sub_resource type="BoxMesh" id="StripeMesh"]
+material = SubResource("Amber")
+size = Vector3(0.12, 0.02, 2)
+
+[sub_resource type="BoxMesh" id="LineMesh"]
+material = SubResource("Amber")
+size = Vector3(0.10, 0.02, 36)
+
+[sub_resource type="BoxMesh" id="SignMesh"]
+material = SubResource("Dark")
+size = Vector3(7, 1.7, 0.15)
+
+[node name="MovementYard" type="Node3D"]
+script = ExtResource("4")
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-48, -30, 0)
+light_color = Color(1, 0.85, 0.63, 1)
+light_energy = 0.9
+shadow_enabled = true
+directional_shadow_max_distance = 65.0
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="Ground" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(0, -0.3, 0)
+scale = Vector3(36, 0.6, 40)
+
+[node name="NorthWall" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(0, 1.5, -18)
+scale = Vector3(36, 3, 0.6)
+
+[node name="SouthWall" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(0, 1.5, 18)
+scale = Vector3(36, 3, 0.6)
+
+[node name="WestWall" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(-17, 1.5, 0)
+scale = Vector3(0.6, 3, 36)
+
+[node name="EastWall" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(17, 1.5, 0)
+scale = Vector3(0.6, 3, 36)
+
+[node name="Road" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(0, 0.005, 0)
+mesh = SubResource("RoadMesh")
+
+[node name="RoadLeftLine" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(-3.7, 0.02, 0)
+mesh = SubResource("LineMesh")
+
+[node name="RoadRightLine" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(3.7, 0.02, 0)
+mesh = SubResource("LineMesh")
+
+[node name="Stripe01" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(0, 0.02, -14)
+mesh = SubResource("StripeMesh")
+
+[node name="Stripe02" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(0, 0.02, -10)
+mesh = SubResource("StripeMesh")
+
+[node name="Stripe03" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(0, 0.02, -6)
+mesh = SubResource("StripeMesh")
+
+[node name="Stripe04" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(0, 0.02, -2)
+mesh = SubResource("StripeMesh")
+
+[node name="Stripe05" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(0, 0.02, 2)
+mesh = SubResource("StripeMesh")
+
+[node name="Stripe06" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(0, 0.02, 6)
+mesh = SubResource("StripeMesh")
+
+[node name="Stripe07" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(0, 0.02, 10)
+mesh = SubResource("StripeMesh")
+
+[node name="Stripe08" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(0, 0.02, 14)
+mesh = SubResource("StripeMesh")
+
+[node name="JumpBarrier" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(1.9, 0.4, -3.5)
+scale = Vector3(3.2, 0.8, 0.65)
+
+[node name="BarrierPaint" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(1.9, 0.82, -3.5)
+scale = Vector3(25, 1, 0.31)
+mesh = SubResource("StripeMesh")
+
+[node name="Ramp" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(-6, 0.35, 0)
+rotation_degrees = Vector3(18, 0, 0)
+scale = Vector3(3, 0.3, 5)
+
+[node name="RampLanding" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(-6, 0.62, -3.55)
+scale = Vector3(3, 1.24, 2.3)
+
+[node name="SupplyCrate01" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(6, 0.6, 2)
+scale = Vector3(1.2, 1.2, 1.2)
+
+[node name="Mesh" parent="Geometry/SupplyCrate01" index="0"]
+material_override = SubResource("Crate")
+
+[node name="SupplyCrate02" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(7.4, 0.6, 2.2)
+scale = Vector3(1.2, 1.2, 1.2)
+
+[node name="Mesh" parent="Geometry/SupplyCrate02" index="0"]
+material_override = SubResource("Crate")
+
+[node name="SupplyCrate03" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(6.7, 1.8, 2.1)
+rotation_degrees = Vector3(0, 12, 0)
+scale = Vector3(1.2, 1.2, 1.2)
+
+[node name="Mesh" parent="Geometry/SupplyCrate03" index="0"]
+material_override = SubResource("Crate")
+
+[node name="Shelter" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(-10, 2.1, -11)
+scale = Vector3(8, 4.2, 6)
+
+[node name="ShelterDoor" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(-10, 1.4, -7.94)
+scale = Vector3(2.1, 2.8, 0.1)
+
+[node name="Mesh" parent="Geometry/ShelterDoor" index="0"]
+material_override = SubResource("Dark")
+
+[node name="CheckpointLeft" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(-4.6, 2.1, -14)
+scale = Vector3(0.4, 4.2, 0.4)
+
+[node name="CheckpointRight" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(4.6, 2.1, -14)
+scale = Vector3(0.4, 4.2, 0.4)
+
+[node name="CheckpointHeader" parent="Geometry" instance=ExtResource("2")]
+position = Vector3(0, 3.7, -14)
+scale = Vector3(9.6, 1.1, 0.45)
+
+[node name="Sign" type="MeshInstance3D" parent="Geometry"]
+position = Vector3(0, 3.7, -13.73)
+mesh = SubResource("SignMesh")
+
+[node name="CheckpointText" type="Label3D" parent="Geometry"]
+position = Vector3(0, 3.95, -13.63)
+font_size = 80
+pixel_size = 0.009
+text = "QUARANTINE / 07"
+modulate = Color(0.92, 0.66, 0.3, 1)
+outline_size = 0
+
+[node name="CheckpointSubtext" type="Label3D" parent="Geometry"]
+position = Vector3(0, 3.3, -13.63)
+font_size = 38
+pixel_size = 0.009
+text = "NO ENTRY WITHOUT CLEARANCE"
+outline_size = 0
+
+[node name="RampLabel" type="Label3D" parent="Geometry"]
+position = Vector3(-6, 0.08, 3.9)
+rotation_degrees = Vector3(-90, 0, 0)
+font_size = 64
+pixel_size = 0.012
+text = "01 / INCLINE"
+modulate = Color(0.86, 0.65, 0.3, 1)
+outline_size = 0
+
+[node name="JumpLabel" type="Label3D" parent="Geometry"]
+position = Vector3(1.9, 0.06, -1.9)
+rotation_degrees = Vector3(-90, 0, 0)
+font_size = 64
+pixel_size = 0.012
+text = "02 / JUMP"
+modulate = Color(0.86, 0.65, 0.3, 1)
+outline_size = 0
+
+[node name="Spawn" type="Marker3D" parent="."]
+position = Vector3(0, 0.05, 7)
+
+[node name="Player" parent="." instance=ExtResource("1")]
+position = Vector3(0, 0.05, 7)
+
+[node name="MovementHUD" parent="." instance=ExtResource("3")]
+player_path = NodePath("../Player")
+
+[editable path="Geometry/SupplyCrate01"]
+[editable path="Geometry/SupplyCrate02"]
+[editable path="Geometry/SupplyCrate03"]
+[editable path="Geometry/ShelterDoor"]

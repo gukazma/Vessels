@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ItemDefinition" load_steps=3 format=3]
+[ext_resource type="Script" path="res://features/items/item_definition.gd" id="data"]
+[ext_resource type="Texture2D" path="res://assets/pixel/items/ammo_9mm.png" id="icon"]
+[resource]
+script = ExtResource("data")
+id = &"ammo_9mm"
+display_name = "9MM AMMO"
+description = "Pistol ammunition. Press R with the pistol equipped to reload."
+icon = ExtResource("icon")
+max_stack = 60

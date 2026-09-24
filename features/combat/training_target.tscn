@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3]
+[ext_resource type="Script" path="res://features/combat/training_target.gd" id="script"]
+[ext_resource type="Texture2D" path="res://assets/pixel/items/training_target.png" id="sprite"]
+[sub_resource type="RectangleShape2D" id="Body"]
+size = Vector2(22, 32)
+[node name="TrainingTarget" type="StaticBody2D"]
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("script")
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = ExtResource("sprite")
+offset = Vector2(0, -24)
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, -20)
+shape = SubResource("Body")

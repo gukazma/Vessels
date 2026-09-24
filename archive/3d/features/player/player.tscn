@@ -1,0 +1,50 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://features/player/player_controller.gd" id="1"]
+[ext_resource type="Script" path="res://features/player/player_input.gd" id="2"]
+[ext_resource type="Script" path="res://features/player/third_person_camera.gd" id="3"]
+[ext_resource type="Script" path="res://features/player/survivor_visual.gd" id="4"]
+[ext_resource type="PackedScene" path="res://assets/characters/survivor.glb" id="5"]
+
+[sub_resource type="CapsuleShape3D" id="BodyShape"]
+radius = 0.32
+height = 1.8
+
+[sub_resource type="SphereShape3D" id="CameraShape"]
+radius = 0.2
+
+[node name="Player" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 1
+floor_snap_length = 0.3
+floor_constant_speed = true
+floor_max_angle = 0.785398
+script = ExtResource("1")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0, 0.9, 0)
+shape = SubResource("BodyShape")
+
+[node name="Visuals" type="Node3D" parent="."]
+script = ExtResource("4")
+
+[node name="Survivor" parent="Visuals" instance=ExtResource("5")]
+
+[node name="CameraRig" type="Node3D" parent="."]
+position = Vector3(0, 1.4, 0)
+script = ExtResource("3")
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraRig"]
+rotation = Vector3(-0.28, 0, 0)
+spring_length = 5.0
+margin = 0.15
+collision_mask = 1
+shape = SubResource("CameraShape")
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig/SpringArm3D"]
+current = true
+fov = 65.0
+near = 0.1
+
+[node name="Input" type="Node" parent="."]
+script = ExtResource("2")

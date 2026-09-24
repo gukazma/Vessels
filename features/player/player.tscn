@@ -1,0 +1,69 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://features/player/player_controller.gd" id="controller"]
+[ext_resource type="Script" path="res://features/player/player_input.gd" id="input"]
+[ext_resource type="Script" path="res://features/player/survivor_visual.gd" id="visuals"]
+[ext_resource type="Texture2D" path="res://assets/pixel/survivor.png" id="sprite"]
+[ext_resource type="Script" path="res://features/inventory/inventory.gd" id="inventory"]
+[ext_resource type="Script" path="res://features/weapons/weapon_controller.gd" id="weapons"]
+[ext_resource type="Script" path="res://features/items/item_interactor.gd" id="interactor"]
+[ext_resource type="Script" path="res://features/combat/health.gd" id="health"]
+[ext_resource type="Script" path="res://features/weapons/weapon_visual.gd" id="weapon_visual"]
+
+[sub_resource type="CircleShape2D" id="Feet"]
+radius = 6.0
+
+[node name="Player" type="CharacterBody2D"]
+texture_filter = 1
+collision_layer = 2
+collision_mask = 5
+motion_mode = 1
+wall_min_slide_angle = 0.0
+script = ExtResource("controller")
+
+[node name="Collision" type="CollisionShape2D" parent="."]
+position = Vector2(0, -4)
+shape = SubResource("Feet")
+
+[node name="Visuals" type="Node2D" parent="."]
+script = ExtResource("visuals")
+
+[node name="Sprite" type="Sprite2D" parent="Visuals"]
+texture = ExtResource("sprite")
+offset = Vector2(0, -15)
+hframes = 4
+vframes = 4
+
+[node name="WeaponPose" type="Node2D" parent="Visuals/Sprite"]
+visible = false
+script = ExtResource("weapon_visual")
+
+[node name="Pivot" type="Node2D" parent="Visuals/Sprite/WeaponPose"]
+
+[node name="Held" type="Sprite2D" parent="Visuals/Sprite/WeaponPose/Pivot"]
+centered = false
+
+[node name="Camera" type="Camera2D" parent="."]
+position = Vector2(0, -20)
+position_smoothing_enabled = false
+limit_left = 0
+limit_top = 0
+limit_right = 960
+limit_bottom = 640
+
+[node name="Input" type="Node" parent="."]
+script = ExtResource("input")
+
+[node name="Inventory" type="Node" parent="."]
+script = ExtResource("inventory")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("health")
+
+[node name="Weapons" type="Node2D" parent="."]
+position = Vector2(0, -12)
+script = ExtResource("weapons")
+
+[node name="Interaction" type="Node2D" parent="."]
+position = Vector2(0, -4)
+script = ExtResource("interactor")

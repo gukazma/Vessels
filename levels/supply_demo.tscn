@@ -1,0 +1,43 @@
+[gd_scene load_steps=4 format=3]
+[ext_resource type="PackedScene" path="res://features/items/item_pickup.tscn" id="pickup"]
+[ext_resource type="PackedScene" path="res://features/combat/training_target.tscn" id="target"]
+[sub_resource type="SystemFont" id="Font"]
+font_names = PackedStringArray("Consolas", "Courier New")
+antialiasing = 0
+[node name="SupplyDemo" type="Node2D"]
+y_sort_enabled = true
+[node name="Pistol" parent="." instance=ExtResource("pickup")]
+position = Vector2(454, 411)
+item_id = &"pistol"
+loaded_ammo = 8
+[node name="Ammo" parent="." instance=ExtResource("pickup")]
+position = Vector2(452, 444)
+item_id = &"ammo_9mm"
+quantity = 24
+[node name="Shotgun" parent="." instance=ExtResource("pickup")]
+position = Vector2(548, 483)
+item_id = &"shotgun"
+loaded_ammo = 2
+[node name="Shells" parent="." instance=ExtResource("pickup")]
+position = Vector2(580, 484)
+item_id = &"shells"
+quantity = 10
+[node name="Medkit" parent="." instance=ExtResource("pickup")]
+position = Vector2(340, 357)
+item_id = &"medkit"
+quantity = 2
+[node name="TargetNear" parent="." instance=ExtResource("target")]
+position = Vector2(511, 390)
+[node name="TargetRange" parent="." instance=ExtResource("target")]
+position = Vector2(485, 286)
+[node name="TargetShotgun" parent="." instance=ExtResource("target")]
+position = Vector2(664, 493)
+[node name="RangeLabel" type="Label" parent="."]
+offset_left = 451.0
+offset_top = 294.0
+offset_right = 539.0
+offset_bottom = 307.0
+theme_override_colors/font_color = Color(0.26, 0.39, 0.38, 1)
+theme_override_fonts/font = SubResource("Font")
+theme_override_font_sizes/font_size = 8
+text = "PRACTICE RANGE"

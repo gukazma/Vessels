@@ -1,3 +1,15 @@
-# Godot 4+ specific ignores
 .godot/
-/android/
+*.blend1
+*.blend2
+__pycache__/
+.DS_Store
+
+# Local settings and exported builds are not project source.
+.env
+.env.*
+!.env.example
+export_credentials.cfg
+/build/
+/dist/
+/export/
+/exports/
